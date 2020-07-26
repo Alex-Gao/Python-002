@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup as bs
 import pandas as pd
+import re
 
 
 #访问地址
@@ -19,14 +20,18 @@ print('------------------------')
 
 #bs 解析
 bs_info = bs(response.text, 'html.parser')
+i = 0
 for tags in bs_info.find_all('div', attrs={'class': 'movie-item-hover'}):
-    print(tags.find('span', attrs={'class': 'name'}).text.strip())
-    print(tags.find('div', attrs={'class': 'movie-hover-title movie-hover-brief'}).text.strip())
-    print(tags.find_all('div', attrs={'class': 'movie-hover-title'})[1].text.strip())
-    
     film_name = tags.find('span', attrs={'class': 'name'}).text.strip()
-    film_date = tags.find('div', attrs={'class': 'movie-hover-title movie-hover-brief'}).text.strip()
-    film_type = tags.find_all('div', attrs={'class': 'movie-hover-title'})[1].text.strip()
-    mylist = [film_name, film_date, film_type]
+    re_film_date = tags.find_all('div', attrs={'class': 'movie-hover-title movie-hover-brief'})[0].text
+    film_date = re.search(r"(\d{4}-\d{1,2}-\d{1,2})",re_film_date).group(0)
+    re_film_type = tags.find_all('div', attrs={'class': 'movie-hover-title'})[1].text.strip()
+    film_type = re.split("\n+",re_film_type)[1].strip()
+    
+    mylist = [film_name, film_type,film_date]
+    print(mylist)
     movie1 = pd.DataFrame(data=mylist)
     movie1.to_csv('./.movie.csv', encoding='utf8', index=False, mode='a', header=False)
+    i+=1
+    if i==10:
+        break
